@@ -258,7 +258,7 @@ spike = [2 * spike_base]
 
 noise_proportions = [0.05, 0.1, 0.15, 0.2]
 table_trials = []
-n_trials = 2
+n_trials = 200
 
 for _ in tqdm(range(n_trials)):
     table = []
@@ -325,3 +325,8 @@ index=noise_proportions)
 
 print(df_mean)
 print(df_std)
+
+fname = "result/rebuttal/pc1_rebuttal"
+df_mean.to_csv(f"{fname}_n1000_d900_t{n_trials}_mean")
+df_std.to_csv(f"{fname}_n1000_d900_t{n_trials}_std")
+
