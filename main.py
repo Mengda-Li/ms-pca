@@ -19,7 +19,7 @@ def estimate_theta_square(lambda_hat, c):
     return solution1
 
 
-def ms_pca(X_tilde, max_k_r = 10, C = None):
+def _ms_pca(X_tilde, max_k_r = 10, C = None):
     d, n = X_tilde.shape
     c = d / n
     if C is None:
@@ -52,6 +52,55 @@ def ms_pca(X_tilde, max_k_r = 10, C = None):
                 break
             if S_prime[j] < S_tilde[i] - 10* radius:
                 break
+
+    stable_eigenvalues = S_tilde[stable_indices]**2
+    components = U_tilde[:, stable_indices]
+    return stable_eigenvalues, components
+
+    
+def ms_pca(X_tilde, max_k_r = 10, C = None):
+    d, n = X_tilde.shape
+    c = d / n
+    if C is None:
+        C = 1/c
+    max_k_r = min(d, max_k_r)
+
+    svd_tilde = TruncatedSVD(n_components=max_k_r, n_iter=7, random_state=42)
+    svd_tilde.fit(X_tilde.T/np.sqrt(n))
+    S_tilde = svd_tilde.singular_values_
+    U_tilde = svd_tilde.components_.T
+
+
+    # U_tilde, S_tilde, Vh_tilde = LA.svd(X_tilde/np.sqrt(n))
+    theta_square_prime = estimate_theta_square(S_tilde[0], c)
+
+    # Generate new noisy data
+    noise_proportion_prime = 1
+    gamma_prime = np.random.binomial(1, noise_proportion_prime, n)
+    noise_norm_prime = 2 * (theta_square_prime / noise_proportion_prime)**0.5
+
+    m_prime, _ = LA.qr(rng.normal(size=(d, 1)))
+    m_prime = noise_norm_prime * m_prime
+    A_prime = m_prime * gamma_prime
+    X_prime = X_tilde + A_prime 
+    svd_prime = TruncatedSVD(n_components=max_k_r, n_iter=7, random_state=42)
+    svd_prime.fit(X_prime.T/np.sqrt(n))
+    S_prime = svd_prime.singular_values_
+
+    # U_prime, S_prime, Vh_prime = LA.svd(X_prime/np.sqrt(n))
+
+    radius = C * n**(-1/2)
+
+    # Step 5: Invariance check
+    stable_indices = []
+
+    for i in range(max_k_r):
+        for j in range(max_k_r):
+            if abs(S_tilde[i] - S_prime[j]) < radius:
+                stable_indices.append(i)
+                break
+            # if S_prime[j] < S_tilde[i] - 10* radius:
+            #     break
 
     stable_eigenvalues = S_tilde[stable_indices]**2
     components = U_tilde[:, stable_indices]
