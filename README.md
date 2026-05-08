@@ -1,1 +1,1 @@
-Code for ICML 2026 submission: "Invariant Principal Components in High-dimensional Mean-Shift Mixture"
+Code for ICML 2026 paper: *Mean-Shift PCA by Knockoﬀ Mean*
